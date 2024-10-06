@@ -1,26 +1,41 @@
 <?php
 
-namespace Boolval;
+namespace Boolval\Routing;
 
 class Route
 {
     /**
-     *
+     * ...
+     * 
+     * @var array
      */
     public static $matches = [];
 
     /**
-     *
+     * ...
+     * 
+     * @var array
      */
     public static $segments = [];
 
     /**
-     *
+     * ...
+     * 
+     * @var string
      */
     public static $uri = null;
 
     /**
-     *
+     * ...
+     * 
+     * @var string
+     */
+    public static $viewPath = 'view';
+
+    /**
+     * ...
+     * 
+     * @var array
      */
     public static $regex = [
         ':number' => '([0-9]+)',
@@ -30,25 +45,31 @@ class Route
     ];
 
     /**
-     * @return String '/' || '/shop/'
+     * ...
+     * 
+     * @return string '/' || '/shop/'
      */
-    public static function base() : String
+    public static function base() : string
     {
         return str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
     }
 
     /**
-     * @return String 'en/user/edit/3'
+     * ...
+     * 
+     * @return string 'en/user/edit/3'
      */
-    public static function path() : String
+    public static function path() : string
     {
         return substr(explode('?', $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'])[0], strlen(self::base()));
     }
 
     /**
-     * @return Array
+     * ...
      *
-     * Array
+     * @return array
+     *
+     * array
      * (
      *     [0] => en
      *     [1] => user
@@ -56,27 +77,33 @@ class Route
      *     [3] => 3
      * )
      */
-    public static function segments() : Array
+    public static function segments() : array
     {
         return explode('/', self::path());
     }
 
     /**
+     * ...
      *
+     * @param  string $method
+     * @return object
      */
-    public static function method($method)
+    public static function method(string $method) : object
     {
         if ($_SERVER['REQUEST_METHOD'] == $method) {
-            return new Self;
+            return new self;
         }
 
         return self::escape();
     }
 
     /**
+     * ...
      *
+     * @param  string $string
+     * @return object
      */
-    public static function uri(String $string)
+    public static function uri(string $string) : object
     {
         if (self::$uri === null) {
             self::$uri = self::path();
@@ -84,16 +111,19 @@ class Route
 
         if (preg_match('~^' . strtr($string, self::$regex) . '$~ixs', self::$uri, self::$matches)) {
             array_shift(self::$matches);
-            return new Self;
+            return new self;
         }
 
         return self::escape();
     }
 
     /**
+     * ...
      *
+     * @param  string $string
+     * @return object
      */
-    public static function segment(String $string)
+    public static function segment(string $string)
     {
         if (empty(self::$segments)) {
             self::$segments = self::segments();
@@ -102,7 +132,7 @@ class Route
         if (preg_match('~^' . strtr($string, self::$regex) . '$~ixs', array_shift(self::$segments), self::$matches)) {
             array_shift(self::$matches);
             self::$uri = implode('/', self::$segments);
-            return new Self;
+            return new self;
         }
 
         self::$segments = self::segments();
@@ -112,49 +142,95 @@ class Route
     }
 
     /**
+     * ...
      *
+     * @param  string $action
+     * @return object
      */
-    public static function middleware($action)
+    public static function middleware(object $action)
     {
-        if (call_user_func_array($action, self::$matches)) {
-            return new Self;
+        if (self::callUserFuncArray($action)) {
+            return new self;
         }
 
         return self::escape();
     }
 
     /**
+     * ...
      *
+     * @param  string $action
+     * @return object
      */
     public static function group($action)
     {
-        call_user_func_array($action, self::$matches);
+        self::callUserFuncArray($action);
     }
 
     /**
+     * ...
      *
+     * @param  string $action
+     * @return object
      */
     public static function call($action)
     {
-        call_user_func_array($action, self::$matches);
+        self::callUserFuncArray($action);
 
         die;
     }
 
     /**
+     * ...
      *
+     * @param  string $action
+     * @return object
      */
-    public static function include(String $string)
+    public static function callUserFuncArray($action)
     {
-        include dirname(dirname(dirname(__DIR__))) . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $string) . '.php';
+        switch (gettype($action)) {
+            case 'array':
+                return call_user_func_array([new $action[0], $action[1]], self::$matches);
+                break;
+            case 'object':
+                return call_user_func_array($action, self::$matches);
+                break;
+        }
+    }
+
+    /**
+     * ...
+     *
+     * @param  string $viewPath
+     * @return void
+     */
+    public static function setViewPath(string $viewPath)
+    {
+        self::$viewPath = $viewPath;
+    }
+
+    /**
+     * ...
+     *
+     * @param  string $string
+     * @return object
+     */
+    public static function view(string $string)
+    {
+        include dirname(dirname(dirname(__DIR__))) . 
+            DIRECTORY_SEPARATOR . self::$viewPath . 
+            DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $string) . '.php';
 
         die;
     }
 
     /**
+     * ...
      *
+     * @param  string $string
+     * @return object
      */
-    public static function redirect(String $url = '', Int $status = 302)
+    public static function redirect(string $url = '', int $status = 302)
     {
         header('Location: ' . self::base() . $url, true, $status);
 
@@ -162,7 +238,10 @@ class Route
     }
 
     /**
+     * ...
      *
+     * @param  string $string
+     * @return object
      */
     public static function escape()
     {
@@ -170,7 +249,7 @@ class Route
         {
             public function __call($name, $arguments)
             {
-                return $this;
+                return new self;
             }
         };
     }

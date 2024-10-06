@@ -1,6 +1,6 @@
 {
-    "name": "boolval/route",
-    "description": "The Boolval Route",
+    "name": "boolval/routing",
+    "description": "The Boolval Routing",
     "license": "MIT",
     "authors": [
         {
@@ -10,7 +10,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Boolval\\": ""
+            "Boolval\\Routing\\": ""
         }
     },
     "minimum-stability": "dev"
