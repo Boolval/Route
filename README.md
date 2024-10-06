@@ -1,2 +1,2 @@
-# Route
-The Boolval Route
+# Routing
+The Boolval Routing
